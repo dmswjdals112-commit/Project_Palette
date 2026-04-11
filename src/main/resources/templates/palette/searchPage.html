@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<!-- head ------------------------------------------------------------------------------------->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player - Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 50%, #ADD8E6 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* ==================== 네비게이션 ==================== */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #2C3E50;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            color: #87CEEB;
+        }
+
+        .navbar-brand-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #FFB6D9 0%, #FFC0CB 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(255, 182, 217, 0.3);
+        }
+
+        /* ==================== 검색 바 ==================== */
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 30px;
+            position: relative;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 18px 12px 45px;
+            border: 2px solid #E8F0F5;
+            border-radius: 25px;
+            background: #F8FCFE;
+            font-size: 14px;
+            color: #2C3E50;
+            transition: all 0.3s ease;
+        }
+
+        .search-box::placeholder {
+            color: #B0B0B0;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #87CEEB;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #87CEEB;
+            font-size: 18px;
+        }
+
+        /* ==================== 네비게이션 버튼 ==================== */
+        .navbar-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-login {
+            background: transparent;
+            color: #87CEEB;
+            border: 2px solid #87CEEB;
+        }
+
+        .btn-login:hover {
+            background: #87CEEB;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-signup {
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.3);
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(135, 206, 235, 0.4);
+        }
+
+        .btn-profile {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #DDA0DD 0%, #D8BFD8 100%);
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(221, 160, 221, 0.3);
+            padding: 0;
+        }
+
+        .btn-profile:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(221, 160, 221, 0.4);
+        }
+
+        /* ==================== 메인 컨테이너 ==================== */
+        .main-container {
+            padding: 60px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ==================== 검색 결과 헤더 ==================== */
+        .search-header {
+            margin-bottom: 50px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-query {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .search-query span {
+            color: #87CEEB;
+        }
+
+        .search-result-count {
+            font-size: 16px;
+            color: #999;
+        }
+
+        /* ==================== 필터 섹션 ==================== */
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            padding: 10px 20px;
+            border: 2px solid #E8F0F5;
+            border-radius: 20px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-button:hover {
+            border-color: #87CEEB;
+            color: #87CEEB;
+        }
+
+        .filter-button.active {
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            color: white;
+            border-color: #87CEEB;
+        }
+
+        /* ==================== 결과 섹션 ==================== */
+        .results-section {
+            margin-bottom: 100px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        /* ==================== 카드 그리드 ==================== */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .result-card {
+            background: #FFFFFF;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            animation: slideIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .result-card:nth-child(1) { animation-delay: 0s; }
+        .result-card:nth-child(2) { animation-delay: 0.1s; }
+        .result-card:nth-child(3) { animation-delay: 0.2s; }
+        .result-card:nth-child(4) { animation-delay: 0.3s; }
+        .result-card:nth-child(5) { animation-delay: 0.4s; }
+        .result-card:nth-child(6) { animation-delay: 0.5s; }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: rgba(255, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-image.pink {
+            background: linear-gradient(135deg, #FFB6D9 0%, #FFC0CB 100%);
+        }
+
+        .card-image.purple {
+            background: linear-gradient(135deg, #DDA0DD 0%, #D8BFD8 100%);
+        }
+
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover .card-overlay {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .play-button {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #87CEEB;
+            font-size: 28px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-card:hover .play-button {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .result-card:hover .play-button:hover {
+            transform: scale(1.1);
+        }
+
+        .card-info {
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-artist {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #87CEEB;
+        }
+
+        /* ==================== 빈 결과 ==================== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        .empty-suggestions {
+            display: inline-block;
+            text-align: left;
+            padding: 20px;
+            background: rgba(135, 206, 235, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid #87CEEB;
+        }
+
+        .empty-suggestions-title {
+            font-weight: 700;
+            color: #87CEEB;
+            margin-bottom: 10px;
+        }
+
+        .empty-suggestions-list {
+            list-style: none;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .empty-suggestions-list li {
+            margin-bottom: 5px;
+        }
+
+        /* ==================== 페이지네이션 ==================== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 50px;
+        }
+
+        .page-button {
+            padding: 8px 12px;
+            border: 2px solid #E8F0F5;
+            border-radius: 8px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .page-button:hover {
+            border-color: #87CEEB;
+            color: #87CEEB;
+        }
+
+        .page-button.active {
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            color: white;
+            border-color: #87CEEB;
+        }
+
+        .page-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ==================== 로딩 스피너 ==================== */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(135, 206, 235, 0.3);
+            border-top: 4px solid #87CEEB;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ==================== 푸터 ==================== */
+        footer {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid #E8F0F5;
+            margin-top: 100px;
+        }
+
+        footer p {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* ==================== 반응형 ==================== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .navbar-brand {
+                font-size: 20px;
+            }
+
+            .search-container {
+                flex: 1;
+                max-width: none;
+                margin: 0;
+                order: 3;
+                width: 100%;
+            }
+
+            .main-container {
+                padding: 40px 20px;
+            }
+
+            .search-query {
+                font-size: 24px;
+            }
+
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 12px 15px;
+            }
+
+            .navbar-buttons {
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+
+            .search-box {
+                padding: 10px 15px 10px 35px;
+                font-size: 12px;
+            }
+
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 12px;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            .search-query {
+                font-size: 20px;
+            }
+
+            .main-container {
+                padding: 30px 15px;
+            }
+        }
+
+    </style>
+</head>
+<!-- head ------------------------------------------------------------------------------------->
+
+<!-- body ------------------------------------------------------------------------------------->
+<body>
+    <!-- 네비게이션 -->
+    <nav class="navbar">
+        <div class="navbar-brand" onclick="goHome()">
+            <div class="navbar-brand-icon">♪</div>
+            <span>Music Player</span>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input 
+                type="text" 
+                class="search-box" 
+                id="searchInput"
+                placeholder="음악 검색..."
+                value=""
+                onkeyup="handleSearch()"
+            >
+        </div>
+
+        <div class="navbar-buttons">
+            <button class="btn btn-login" onclick="goLogin()">로그인</button>
+            <button class="btn btn-signup" onclick="goSignup()">회원가입</button>
+            <button class="btn-profile" onclick="goProfile()" title="마이페이지">👤</button>
+        </div>
+    </nav>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="main-container">
+        <!-- 검색 결과 헤더 -->
+        <section class="search-header">
+            <div class="search-query">
+                "<span id="queryText">음악</span>" 검색 결과
+            </div>
+            <div class="search-result-count">
+                총 <span id="resultCount">0</span>개의 결과
+            </div>
+        </section>
+
+        <!-- 필터 섹션 -->
+        <div class="filter-section">
+            <button class="filter-button active" onclick="filterResults('all')">모든 결과</button>
+            <button class="filter-button" onclick="filterResults('song')">음악</button>
+            <button class="filter-button" onclick="filterResults('artist')">아티스트</button>
+            <button class="filter-button" onclick="filterResults('album')">앨범</button>
+            <button class="filter-button" onclick="filterResults('playlist')">플레이리스트</button>
+        </div>
+
+        <!-- 로딩 표시 -->
+        <div class="loading" id="loadingIndicator" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- 검색 결과 -->
+        <div id="resultsContainer"></div>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination" id="pagination"></div>
+
+        <!-- 빈 결과 -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">🔍</div>
+            <h2 class="empty-title">검색 결과가 없습니다</h2>
+            <p class="empty-text">다른 검색어로 시도해보세요</p>
+            <div class="empty-suggestions">
+                <div class="empty-suggestions-title">💡 검색 팁:</div>
+                <ul class="empty-suggestions-list">
+                    <li>• 정확한 음악 제목이나 아티스트 이름을 입력하세요</li>
+                    <li>• 스페이스 및 특수문자를 확인하세요</li>
+                    <li>• 더 짧거나 다른 키워드로 시도하세요</li>
+                    <li>• 인기 플레이리스트를 확인해보세요</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <footer>
+        <p>&copy; 2024 Music Player. 모든 권리 보유.</p>
+    </footer>
+
+    <script>
+        let currentPage = 1;
+        let currentFilter = 'all';
+        let allResults = [];
+
+        // URL에서 검색어 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('q') || '';
+        
+        if (query) {
+            document.getElementById('searchInput').value = query;
+            document.getElementById('queryText').textContent = query;
+            searchMusic(query);
+        }
+
+        // 홈으로 이동
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        // 로그인 페이지로 이동
+        function goLogin() {
+            window.location.href = '/login';
+        }
+
+        // 회원가입 페이지로 이동
+        function goSignup() {
+            window.location.href = '/signup';
+        }
+
+        // 마이페이지로 이동
+        function goProfile() {
+            fetch('/api/user/check')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isLoggedIn) {
+                        window.location.href = '/profile';
+                    } else {
+                        alert('로그인 후 마이페이지를 방문할 수 있습니다.');
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('오류:', error);
+                    window.location.href = '/login';
+                });
+        }
+
+        // 검색 처리
+        function handleSearch() {
+            const searchInput = document.getElementById('searchInput').value;
+            if (searchInput.trim() === '') return;
+            
+            // URL 업데이트
+            window.history.replaceState({}, '', `/search?q=${encodeURIComponent(searchInput)}`);
+            
+            document.getElementById('queryText').textContent = searchInput;
+            searchMusic(searchInput);
+        }
+
+        // 엔터키로 검색
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+
+        // 음악 검색
+        function searchMusic(query) {
+            document.getElementById('loadingIndicator').style.display = 'flex';
+            document.getElementById('resultsContainer').innerHTML = '';
+            document.getElementById('pagination').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'none';
+
+            fetch(`/api/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loadingIndicator').style.display = 'none';
+
+                    if (data.success && data.results.length > 0) {
+                        allResults = data.results;
+                        document.getElementById('resultCount').textContent = allResults.length;
+                        displayResults(allResults, 1);
+                    } else {
+                        document.getElementById('resultCount').textContent = '0';
+                        document.getElementById('emptyState').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('오류:', error);
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('resultCount').textContent = '0';
+                    document.getElementById('emptyState').style.display = 'block';
+                });
+        }
+
+        // 필터 적용
+        function filterResults(type) {
+            currentFilter = type;
+            currentPage = 1;
+
+            // 버튼 상태 업데이트
+            document.querySelectorAll('.filter-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 필터링된 결과 표시
+            let filteredResults = allResults;
+            if (type !== 'all') {
+                filteredResults = allResults.filter(result => result.type === type);
+            }
+
+            document.getElementById('resultCount').textContent = filteredResults.length;
+            displayResults(filteredResults, 1);
+        }
+
+        // 결과 표시
+        function displayResults(results, page) {
+            const itemsPerPage = 12;
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedResults = results.slice(startIndex, endIndex);
+
+            let html = '<div class="results-grid">';
+
+            paginatedResults.forEach((result, index) => {
+                const imageColor = ['', 'pink', 'purple'][index % 3];
+                html += `
+                    <div class="result-card" onclick="playMusic(${result.id})">
+                        <div class="card-image ${imageColor}">
+                            ${result.imageUrl ? `<img src="${result.imageUrl}" alt="${result.title}">` : '♪'}
+                            <div class="card-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title">${result.title}</div>
+                            <div class="card-artist">${result.artist}</div>
+                            <div class="card-meta">
+                                <span>🎵 ${result.plays || 0}</span>
+                                <span>⏱️ ${formatDuration(result.duration)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            document.getElementById('resultsContainer').innerHTML = html;
+
+            // 페이지네이션
+            const totalPages = Math.ceil(results.length / itemsPerPage);
+            if (totalPages > 1) {
+                displayPagination(totalPages, page);
+            }
+        }
+
+        // 페이지네이션 표시
+        function displayPagination(totalPages, currentPage) {
+            let html = '';
+
+            // 이전 버튼
+            if (currentPage > 1) {
+                html += `<button class="page-button" onclick="goToPage(${currentPage - 1})">◀</button>`;
+            }
+
+            // 페이지 번호
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === currentPage) {
+                    html += `<button class="page-button active">${i}</button>`;
+                } else {
+                    html += `<button class="page-button" onclick="goToPage(${i})">${i}</button>`;
+                }
+            }
+
+            // 다음 버튼
+            if (currentPage < totalPages) {
+                html += `<button class="page-button" onclick="goToPage(${currentPage + 1})">▶</button>`;
+            }
+
+            document.getElementById('pagination').innerHTML = html;
+        }
+
+        // 페이지 이동
+        function goToPage(page) {
+            currentPage = page;
+            let filteredResults = allResults;
+            if (currentFilter !== 'all') {
+                filteredResults = allResults.filter(result => result.type === currentFilter);
+            }
+            displayResults(filteredResults, page);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 음악 재생
+        function playMusic(musicId) {
+            window.location.href = `/song/play/${musicId}`;
+        }
+
+        // 시간 포맷
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // 페이지 로드 시
+        window.addEventListener('load', function() {
+            console.log('검색 페이지 로드됨');
+        });
+    </script>
+</body>
+<!-- head ------------------------------------------------------------------------------------->
+</html>

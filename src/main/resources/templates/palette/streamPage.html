@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<!-- head ------------------------------------------------------------------------------------->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player - Streaming</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 50%, #ADD8E6 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        body.dynamic-bg {
+            transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ==================== 네비게이션 ==================== */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #2C3E50;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            color: #87CEEB;
+        }
+
+        .navbar-brand-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #FFB6D9 0%, #FFC0CB 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(255, 182, 217, 0.3);
+        }
+
+        .navbar-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.3);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(135, 206, 235, 0.4);
+        }
+
+        /* ==================== 메인 컨테이너 ==================== */
+        .streaming-container {
+            display: flex;
+            height: calc(100vh - 80px);
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* ==================== 왼쪽 패널 - 플레이어 ==================== */
+        .player-section {
+            flex: 0 0 400px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-card {
+            background: linear-gradient(135deg, rgba(135, 206, 235, 0.1) 0%, rgba(173, 216, 230, 0.1) 100%);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(135, 206, 235, 0.2);
+        }
+
+        /* ==================== 앨범 아트 ==================== */
+        .album-art-container {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(135, 206, 235, 0.3);
+        }
+
+        .album-art-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .album-art-placeholder {
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ==================== 음악 정보 ==================== */
+        .music-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .music-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .music-artist {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .music-album {
+            font-size: 12px;
+            color: #87CEEB;
+        }
+
+        /* ==================== 진행 바 ==================== */
+        .progress-container {
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #E0E0E0;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #87CEEB 0%, #ADD8E6 100%);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        /* ==================== 컨트롤 버튼 ==================== */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(135, 206, 235, 0.4);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn.play {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            background: linear-gradient(135deg, #FFB6D9 0%, #FFC0CB 100%);
+            box-shadow: 0 5px 15px rgba(255, 182, 217, 0.3);
+        }
+
+        .control-btn.play:hover {
+            box-shadow: 0 8px 20px rgba(255, 182, 217, 0.4);
+        }
+
+        /* ==================== 볼륨 컨트롤 ==================== */
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .volume-icon {
+            font-size: 16px;
+            color: #87CEEB;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 4px;
+            background: #E0E0E0;
+            border-radius: 2px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(135, 206, 235, 0.3);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 5px rgba(135, 206, 235, 0.3);
+        }
+
+        /* ==================== 재생목록 ==================== */
+        .playlist-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #E8F0F5;
+        }
+
+        .playlist-info {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        /* ==================== 오른쪽 패널 - 플레이리스트 ==================== */
+        .playlist-section {
+            flex: 1;
+            background: white;
+            padding: 30px 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .playlist-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2C3E50;
+        }
+
+        .playlist-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* ==================== 플레이리스트 곡 목록 ==================== */
+        .playlist-songs {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .song-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #F8FCFE;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .song-item:hover {
+            background: rgba(135, 206, 235, 0.1);
+            border-left-color: #87CEEB;
+            transform: translateX(5px);
+        }
+
+        .song-item.playing {
+            background: linear-gradient(135deg, rgba(135, 206, 235, 0.15) 0%, rgba(173, 216, 230, 0.15) 100%);
+            border-left-color: #87CEEB;
+        }
+
+        .song-number {
+            width: 30px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+
+        .song-item.playing .song-number {
+            color: #87CEEB;
+            font-weight: 700;
+        }
+
+        .song-image {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-right: 15px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .song-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .song-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .song-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2C3E50;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .song-artist {
+            font-size: 12px;
+            color: #999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .song-duration {
+            margin-left: 15px;
+            font-size: 12px;
+            color: #999;
+            white-space: nowrap;
+        }
+
+        .song-menu {
+            margin-left: 10px;
+            padding: 5px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .song-item:hover .song-menu {
+            opacity: 1;
+        }
+
+        /* ==================== 스크롤바 ==================== */
+        .player-section::-webkit-scrollbar,
+        .playlist-songs::-webkit-scrollbar,
+        .playlist-section::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .player-section::-webkit-scrollbar-track,
+        .playlist-songs::-webkit-scrollbar-track,
+        .playlist-section::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .player-section::-webkit-scrollbar-thumb,
+        .playlist-songs::-webkit-scrollbar-thumb,
+        .playlist-section::-webkit-scrollbar-thumb {
+            background: #87CEEB;
+            border-radius: 3px;
+        }
+
+        .player-section::-webkit-scrollbar-thumb:hover,
+        .playlist-songs::-webkit-scrollbar-thumb:hover,
+        .playlist-section::-webkit-scrollbar-thumb:hover {
+            background: #ADD8E6;
+        }
+
+        /* ==================== 빈 상태 ==================== */
+        .empty-playlist {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* ==================== 반응형 ==================== */
+        @media (max-width: 1024px) {
+            .streaming-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .player-section {
+                flex: 0 0 auto;
+                max-height: 500px;
+                border-right: none;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            }
+
+            .playlist-section {
+                flex: 1;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+            }
+
+            .player-section {
+                flex: 0 0 auto;
+                padding: 20px 15px;
+            }
+
+            .playlist-section {
+                padding: 20px 15px;
+            }
+
+            .playlist-name {
+                font-size: 20px;
+            }
+
+            .song-item {
+                padding: 12px;
+                margin-bottom: 8px;
+            }
+
+            .song-image {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                margin-right: 10px;
+            }
+
+            .playlist-stats {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 12px 15px;
+            }
+
+            .player-section {
+                padding: 15px 10px;
+            }
+
+            .playlist-section {
+                padding: 15px 10px;
+            }
+
+            .album-art-container {
+                font-size: 50px;
+            }
+
+            .music-title {
+                font-size: 16px;
+            }
+
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .control-btn.play {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .song-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .song-image {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .song-duration {
+                margin-left: 0;
+                margin-top: 8px;
+            }
+        }
+
+    </style>
+</head>
+<!-- head ------------------------------------------------------------------------------------->
+
+<!-- body ------------------------------------------------------------------------------------->
+<body>
+    <!-- 네비게이션 -->
+    <nav class="navbar">
+        <div class="navbar-brand" onclick="goHome()">
+            <div class="navbar-brand-icon">♪</div>
+            <span>Music Player</span>
+        </div>
+        <div class="navbar-buttons">
+            <button class="btn back-btn" onclick="goBack()">← 돌아가기</button>
+        </div>
+    </nav>
+
+    <!-- 스트리밍 컨테이너 -->
+    <div class="streaming-container">
+        <!-- 왼쪽 패널 - 플레이어 -->
+        <div class="player-section">
+            <!-- 앨범 아트 -->
+            <div class="album-art-container">
+                <img id="albumArt" src="" alt="앨범 아트" style="display: none;">
+                <div id="albumPlaceholder" class="album-art-placeholder">♪</div>
+            </div>
+
+            <!-- 플레이어 카드 -->
+            <div class="player-card">
+                <!-- 음악 정보 -->
+                <div class="music-info">
+                    <div class="music-title" id="currentTitle">곡 제목</div>
+                    <div class="music-artist" id="currentArtist">아티스트</div>
+                    <div class="music-album" id="currentAlbum">앨범</div>
+                </div>
+
+                <!-- 진행 바 -->
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="time-display">
+                        <span id="currentTime">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                </div>
+
+                <!-- 컨트롤 버튼 -->
+                <div class="controls">
+                    <button class="control-btn" onclick="toggleShuffle()" title="셔플">🔀</button>
+                    <button class="control-btn" onclick="previousTrack()" title="이전">⏮</button>
+                    <button class="control-btn play" id="playBtn" onclick="togglePlay()" title="재생/일시정지">▶</button>
+                    <button class="control-btn" onclick="nextTrack()" title="다음">⏭</button>
+                    <button class="control-btn" onclick="toggleRepeat()" title="반복">🔁</button>
+                </div>
+
+                <!-- 볼륨 컨트롤 -->
+                <div class="volume-container">
+                    <span class="volume-icon">🔊</span>
+                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70" onchange="setVolume(this.value)">
+                </div>
+            </div>
+
+            <!-- 재생 목록 정보 -->
+            <div style="margin-top: 20px;">
+                <div class="playlist-title">재생 목록</div>
+                <div class="playlist-info">
+                    <span id="playlistSongCount">0</span>곡 • 
+                    <span id="playlistDuration">0시간</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽 패널 - 플레이리스트 -->
+        <div class="playlist-section">
+            <!-- 플레이리스트 헤더 -->
+            <div class="playlist-header">
+                <div>
+                    <div class="playlist-name" id="playlistName">재생 목록</div>
+                </div>
+                <div class="playlist-stats">
+                    <div class="stats-item">
+                        <span>🎵</span>
+                        <span id="totalSongs">0곡</span>
+                    </div>
+                    <div class="stats-item">
+                        <span>⏱️</span>
+                        <span id="totalDuration">0시간</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 플레이리스트 곡 목록 -->
+            <div class="playlist-songs" id="playlistSongs">
+                <div class="empty-playlist">
+                    <div class="empty-icon">🎵</div>
+                    <div class="empty-title">재생 목록이 비어있습니다</div>
+                    <div class="empty-text">음악을 추가하여 시작하세요</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 숨김 오디오 플레이어 -->
+    <audio id="audioPlayer"></audio>
+
+    <script>
+        let currentPlaylist = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let shuffle = false;
+        let repeatMode = 0; // 0: 반복 안함, 1: 전체 반복, 2: 한곡 반복
+        let volume = 70;
+
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playBtn = document.getElementById('playBtn');
+        const playlistSongsContainer = document.getElementById('playlistSongs');
+
+        // URL에서 플레이리스트 ID 가져오기
+        const playlistId = new URLSearchParams(window.location.search).get('id') || 'all';
+
+        // 페이지 로드 시 플레이리스트 로드
+        window.addEventListener('load', function() {
+            loadPlaylist(playlistId);
+        });
+
+        // 홈으로 이동
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        // 뒤로가기
+        function goBack() {
+            window.history.back();
+        }
+
+        // 플레이리스트 로드
+        function loadPlaylist(id) {
+            fetch(`/api/playlist/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentPlaylist = data.songs;
+                        document.getElementById('playlistName').textContent = data.name;
+                        updatePlaylistInfo();
+                        displayPlaylist();
+                        
+                        if (currentPlaylist.length > 0) {
+                            loadTrack(0);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('오류:', error);
+                });
+        }
+
+        // 플레이리스트 정보 업데이트
+        function updatePlaylistInfo() {
+            const songCount = currentPlaylist.length;
+            let totalDuration = 0;
+
+            currentPlaylist.forEach(song => {
+                totalDuration += song.duration || 0;
+            });
+
+            const hours = Math.floor(totalDuration / 3600);
+            const minutes = Math.floor((totalDuration % 3600) / 60);
+
+            document.getElementById('playlistSongCount').textContent = songCount;
+            document.getElementById('playlistDuration').textContent = hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
+            document.getElementById('totalSongs').textContent = `${songCount}곡`;
+            document.getElementById('totalDuration').textContent = hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
+        }
+
+        // 플레이리스트 표시
+        function displayPlaylist() {
+            if (currentPlaylist.length === 0) {
+                playlistSongsContainer.innerHTML = `
+                    <div class="empty-playlist">
+                        <div class="empty-icon">🎵</div>
+                        <div class="empty-title">재생 목록이 비어있습니다</div>
+                        <div class="empty-text">음악을 추가하여 시작하세요</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            currentPlaylist.forEach((song, index) => {
+                const isCurrentSong = index === currentIndex;
+                html += `
+                    <div class="song-item ${isCurrentSong ? 'playing' : ''}" onclick="loadTrack(${index})">
+                        <div class="song-number">${index + 1}</div>
+                        <div class="song-image">
+                            ${song.imageUrl ? `<img src="${song.imageUrl}" alt="${song.title}">` : '♪'}
+                        </div>
+                        <div class="song-details">
+                            <div class="song-title">${song.title}</div>
+                            <div class="song-artist">${song.artist}</div>
+                        </div>
+                        <div class="song-duration">${formatTime(song.duration)}</div>
+                        <div class="song-menu">⋮</div>
+                    </div>
+                `;
+            });
+
+            playlistSongsContainer.innerHTML = html;
+        }
+
+        // 곡 로드
+        function loadTrack(index) {
+            if (currentPlaylist.length === 0) return;
+
+            currentIndex = index;
+            const song = currentPlaylist[index];
+
+            document.getElementById('currentTitle').textContent = song.title;
+            document.getElementById('currentArtist').textContent = song.artist;
+            document.getElementById('currentAlbum').textContent = song.album || '';
+            document.getElementById('duration').textContent = formatTime(song.duration);
+
+            if (song.imageUrl) {
+                const albumImg = document.getElementById('albumArt');
+                albumImg.src = song.imageUrl;
+                albumImg.style.display = 'block';
+                document.getElementById('albumPlaceholder').style.display = 'none';
+            } else {
+                document.getElementById('albumArt').style.display = 'none';
+                document.getElementById('albumPlaceholder').style.display = 'flex';
+            }
+
+            audioPlayer.src = song.url;
+            audioPlayer.volume = volume / 100;
+
+            displayPlaylist();
+
+            if (isPlaying) {
+                audioPlayer.play();
+            }
+        }
+
+        // 재생/일시정지
+        function togglePlay() {
+            if (!audioPlayer.src) return;
+
+            if (isPlaying) {
+                audioPlayer.pause();
+                playBtn.textContent = '▶';
+                isPlaying = false;
+            } else {
+                audioPlayer.play();
+                playBtn.textContent = '⏸';
+                isPlaying = true;
+            }
+        }
+
+        // 이전 곡
+        function previousTrack() {
+            let newIndex = currentIndex - 1;
+            if (newIndex < 0) {
+                newIndex = currentPlaylist.length - 1;
+            }
+            loadTrack(newIndex);
+            if (isPlaying) audioPlayer.play();
+        }
+
+        // 다음 곡
+        function nextTrack() {
+            let newIndex = currentIndex + 1;
+            if (newIndex >= currentPlaylist.length) {
+                newIndex = 0;
+            }
+            loadTrack(newIndex);
+            if (isPlaying) audioPlayer.play();
+        }
+
+        // 셔플
+        function toggleShuffle() {
+            shuffle = !shuffle;
+            console.log('셔플:', shuffle ? '활성화' : '비활성화');
+        }
+
+        // 반복
+        function toggleRepeat() {
+            repeatMode = (repeatMode + 1) % 3;
+            console.log('반복 모드:', repeatMode);
+        }
+
+        // 볼륨 설정
+        function setVolume(value) {
+            volume = value;
+            audioPlayer.volume = value / 100;
+        }
+
+        // 진행 바 업데이트
+        audioPlayer.addEventListener('timeupdate', function() {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('currentTime').textContent = formatTime(audioPlayer.currentTime);
+        });
+
+        // 곡 종료
+        audioPlayer.addEventListener('ended', function() {
+            if (repeatMode === 2) {
+                // 한곡 반복
+                audioPlayer.currentTime = 0;
+                audioPlayer.play();
+            } else if (repeatMode === 1 || currentIndex < currentPlaylist.length - 1) {
+                // 전체 반복 또는 다음 곡
+                nextTrack();
+            } else {
+                isPlaying = false;
+                playBtn.textContent = '▶';
+            }
+        });
+
+        // 진행 바 클릭
+        document.getElementById('progressBar').addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audioPlayer.currentTime = percent * audioPlayer.duration;
+        });
+
+        // 시간 포맷
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // 배경 색상 변경 (앨범 아트 기반)
+        function updateBackgroundColor(imageSrc) {
+            // 색상 추출 로직
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                let r = 0, g = 0, b = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    r += data[i];
+                    g += data[i + 1];
+                    b += data[i + 2];
+                }
+                
+                const pixelCount = data.length / 4;
+                r = Math.floor(r / pixelCount);
+                g = Math.floor(g / pixelCount);
+                b = Math.floor(b / pixelCount);
+                
+                const darkerColor = `rgb(${Math.floor(r * 0.5)}, ${Math.floor(g * 0.5)}, ${Math.floor(b * 0.5)})`;
+                document.body.style.background = `linear-gradient(135deg, rgb(${r}, ${g}, ${b}) 0%, ${darkerColor} 100%)`;
+                document.body.classList.add('dynamic-bg');
+            };
+            img.src = imageSrc;
+        }
+
+        // 앨범 아트 변경 감지
+        const observer = new MutationObserver(function() {
+            const albumImg = document.getElementById('albumArt');
+            if (albumImg.src && albumImg.style.display !== 'none') {
+                updateBackgroundColor(albumImg.src);
+            }
+        });
+
+        observer.observe(document.getElementById('albumArt'), { attributes: true });
+    </script>
+</body>
+<!-- head ------------------------------------------------------------------------------------->
+</html>
