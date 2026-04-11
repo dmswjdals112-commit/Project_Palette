@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<!-- head ------------------------------------------------------------------------------------->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palette-mainPage</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 50%, #ADD8E6 100%);
+            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* ==================== 네비게이션 ==================== */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #2C3E50;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            color: #87CEEB;
+        }
+
+        .navbar-brand-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #FFB6D9 0%, #FFC0CB 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(255, 182, 217, 0.3);
+        }
+
+        /* ==================== 검색 바 ==================== */
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 30px;
+            position: relative;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 18px 12px 45px;
+            border: 2px solid #E8F0F5;
+            border-radius: 25px;
+            background: #F8FCFE;
+            font-size: 14px;
+            color: #2C3E50;
+            transition: all 0.3s ease;
+        }
+
+        .search-box::placeholder {
+            color: #B0B0B0;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #87CEEB;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #87CEEB;
+            font-size: 18px;
+        }
+
+        /* ==================== 네비게이션 버튼 ==================== */
+        .navbar-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-login {
+            background: transparent;
+            color: #87CEEB;
+            border: 2px solid #87CEEB;
+        }
+
+        .btn-login:hover {
+            background: #87CEEB;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-signup {
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.3);
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(135, 206, 235, 0.4);
+        }
+
+        .btn-profile {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #DDA0DD 0%, #D8BFD8 100%);
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(221, 160, 221, 0.3);
+            padding: 0;
+        }
+
+        .btn-profile:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(221, 160, 221, 0.4);
+        }
+
+        /* ==================== 메인 컨테이너 ==================== */
+        .main-container {
+            padding: 60px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ==================== 히어로 섹션 ==================== */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 80px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        /* ==================== 섹션 타이틀 ==================== */
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        /* ==================== 플레이리스트 섹션 ==================== */
+        .playlist-section {
+            margin-bottom: 100px;
+        }
+
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            padding: 20px 0;
+        }
+
+        .carousel {
+            display: flex;
+            gap: 25px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding-bottom: 15px;
+            scroll-padding: 10px;
+        }
+
+        .carousel::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .carousel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        .carousel::-webkit-scrollbar-thumb {
+            background: #87CEEB;
+            border-radius: 10px;
+        }
+
+        .carousel::-webkit-scrollbar-thumb:hover {
+            background: #ADD8E6;
+        }
+
+        /* ==================== 플레이리스트 카드 ==================== */
+        .playlist-card {
+            flex: 0 0 280px;
+            background: #FFFFFF;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            animation: slideIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .playlist-card:nth-child(1) { animation-delay: 0s; }
+        .playlist-card:nth-child(2) { animation-delay: 0.1s; }
+        .playlist-card:nth-child(3) { animation-delay: 0.2s; }
+        .playlist-card:nth-child(4) { animation-delay: 0.3s; }
+        .playlist-card:nth-child(5) { animation-delay: 0.4s; }
+        .playlist-card:nth-child(6) { animation-delay: 0.5s; }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .playlist-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .playlist-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #FFB6D9 0%, #FFC0CB 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: rgba(255, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .playlist-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .playlist-image.blue {
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
+        }
+
+        .playlist-image.purple {
+            background: linear-gradient(135deg, #DDA0DD 0%, #D8BFD8 100%);
+        }
+
+        .playlist-image.pink-light {
+            background: linear-gradient(135deg, #FFB6D9 0%, #FFC0CB 100%);
+        }
+
+        .playlist-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .playlist-card:hover .playlist-overlay {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .play-button {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #87CEEB;
+            font-size: 28px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .playlist-card:hover .play-button {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .playlist-card:hover .play-button:hover {
+            transform: scale(1.1);
+        }
+
+        .playlist-info {
+            padding: 20px;
+        }
+
+        .playlist-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .playlist-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .playlist-count {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ==================== 화살표 버튼 ==================== */
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #87CEEB;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .carousel-button:hover {
+            background: #87CEEB;
+            color: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-button.prev {
+            left: -25px;
+        }
+
+        .carousel-button.next {
+            right: -25px;
+        }
+
+        /* ==================== 푸터 ==================== */
+        footer {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid #E8F0F5;
+            margin-top: 100px;
+        }
+
+        footer p {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* ==================== 반응형 ==================== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .navbar-brand {
+                font-size: 20px;
+            }
+
+            .search-container {
+                flex: 1;
+                max-width: none;
+                margin: 0;
+                order: 3;
+                width: 100%;
+            }
+
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-subtitle {
+                font-size: 16px;
+            }
+
+            .main-container {
+                padding: 40px 20px;
+            }
+
+            .playlist-card {
+                flex: 0 0 220px;
+            }
+
+            .carousel-button.prev {
+                left: -20px;
+            }
+
+            .carousel-button.next {
+                right: -20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 12px 15px;
+            }
+
+            .navbar-buttons {
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+
+            .hero-title {
+                font-size: 28px;
+            }
+
+            .search-box {
+                padding: 10px 15px 10px 35px;
+                font-size: 12px;
+            }
+
+            .playlist-card {
+                flex: 0 0 180px;
+            }
+
+            .playlist-image {
+                height: 140px;
+                font-size: 40px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+        }
+
+    </style>
+</head>
+<!-- head ------------------------------------------------------------------------------------->
+
+<!-- body ------------------------------------------------------------------------------------->
+<body>
+    <!-- 네비게이션 -->
+    <nav class="navbar">
+        <div class="navbar-brand" onclick="goHome()">
+            <div class="navbar-brand-icon">♪</div>
+            <span>Music Player</span>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input 
+                type="text" 
+                class="search-box" 
+                id="searchInput"
+                placeholder="음악 검색..."
+                onkeyup="handleSearch()"
+            >
+        </div>
+
+        <div class="navbar-buttons">
+            <button class="btn btn-login" onclick="goLogin()">로그인</button>
+            <button class="btn btn-signup" onclick="goSignup()">회원가입</button>
+            <button class="btn-profile" onclick="goProfile()" title="마이페이지">👤</button>
+        </div>
+    </nav>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="main-container">
+        <!-- 히어로 섹션 -->
+        <section class="hero-section">
+            <h1 class="hero-title">음악의 세계에 빠져보세요</h1>
+            <p class="hero-subtitle">다양한 플레이리스트와 곡들을 탐색하고 즐겨보세요</p>
+        </section>
+
+        <!-- 추천 플레이리스트 -->
+        <section class="playlist-section">
+            <div class="section-title">
+                <div class="section-icon">⭐</div>
+                추천 플레이리스트
+            </div>
+            
+            <div class="carousel-container">
+                <button class="carousel-button prev" onclick="scrollCarousel('playlist1', -1)">❮</button>
+                
+                <div class="carousel" id="playlist1">
+                    <!-- 플레이리스트 카드 1 -->
+                    <div class="playlist-card" onclick="playPlaylist(1)">
+                        <div class="playlist-image blue">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Summer Vibes</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 25곡</span>
+                                <span>2.5시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 플레이리스트 카드 2 -->
+                    <div class="playlist-card" onclick="playPlaylist(2)">
+                        <div class="playlist-image pink-light">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Chill Beats</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 32곡</span>
+                                <span>3.2시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 플레이리스트 카드 3 -->
+                    <div class="playlist-card" onclick="playPlaylist(3)">
+                        <div class="playlist-image purple">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Workout Mix</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 28곡</span>
+                                <span>2.8시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 플레이리스트 카드 4 -->
+                    <div class="playlist-card" onclick="playPlaylist(4)">
+                        <div class="playlist-image blue">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Night Drive</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 30곡</span>
+                                <span>3.1시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 플레이리스트 카드 5 -->
+                    <div class="playlist-card" onclick="playPlaylist(5)">
+                        <div class="playlist-image pink-light">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Focus Mode</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 24곡</span>
+                                <span>2.3시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 플레이리스트 카드 6 -->
+                    <div class="playlist-card" onclick="playPlaylist(6)">
+                        <div class="playlist-image purple">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Party Time</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 35곡</span>
+                                <span>3.5시간</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="carousel-button next" onclick="scrollCarousel('playlist1', 1)">❯</button>
+            </div>
+        </section>
+
+        <!-- 인기 플레이리스트 -->
+        <section class="playlist-section">
+            <div class="section-title">
+                <div class="section-icon">🔥</div>
+                인기 플레이리스트
+            </div>
+            
+            <div class="carousel-container">
+                <button class="carousel-button prev" onclick="scrollCarousel('playlist2', -1)">❮</button>
+                
+                <div class="carousel" id="playlist2">
+                    <!-- 플레이리스트 카드들 -->
+                    <div class="playlist-card" onclick="playPlaylist(7)">
+                        <div class="playlist-image pink-light">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">K-Pop Hits</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 40곡</span>
+                                <span>4.0시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="playlist-card" onclick="playPlaylist(8)">
+                        <div class="playlist-image blue">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Lo-Fi Hip Hop</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 45곡</span>
+                                <span>4.5시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="playlist-card" onclick="playPlaylist(9)">
+                        <div class="playlist-image purple">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Classic Ballads</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 38곡</span>
+                                <span>3.8시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="playlist-card" onclick="playPlaylist(10)">
+                        <div class="playlist-image pink-light">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Jazz Classics</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 33곡</span>
+                                <span>3.3시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="playlist-card" onclick="playPlaylist(11)">
+                        <div class="playlist-image blue">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Indie Gems</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 29곡</span>
+                                <span>2.9시간</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="playlist-card" onclick="playPlaylist(12)">
+                        <div class="playlist-image purple">
+                            <div class="playlist-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="playlist-info">
+                            <div class="playlist-title">Electronic Vibes</div>
+                            <div class="playlist-meta">
+                                <span class="playlist-count">🎵 42곡</span>
+                                <span>4.2시간</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="carousel-button next" onclick="scrollCarousel('playlist2', 1)">❯</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- 푸터 -->
+    <footer>
+        <p>&copy; 2024 Music Player. 모든 권리 보유.</p>
+    </footer>
+
+    <script>
+        // 홈으로 이동
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        // 로그인 페이지로 이동
+        function goLogin() {
+            window.location.href = '/login';
+        }
+
+        // 회원가입 페이지로 이동
+        function goSignup() {
+            window.location.href = '/signup';
+        }
+
+        // 마이페이지로 이동
+        function goProfile() {
+            // 로그인 여부 확인 후 이동
+            fetch('/api/user/check')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isLoggedIn) {
+                        window.location.href = '/profile';
+                    } else {
+                        alert('로그인 후 마이페이지를 방문할 수 있습니다.');
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('오류:', error);
+                    window.location.href = '/login';
+                });
+        }
+
+        // 검색 기능
+        function handleSearch() {
+            const searchInput = document.getElementById('searchInput').value;
+            if (searchInput.trim() === '') return;
+            
+            console.log('검색:', searchInput);
+            // 검색 결과 페이지로 이동
+            window.location.href = `/search?q=${encodeURIComponent(searchInput)}`;
+        }
+
+        // 엔터키로 검색
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+
+        // 캐러셀 스크롤
+        function scrollCarousel(carouselId, direction) {
+            const carousel = document.getElementById(carouselId);
+            const scrollAmount = 300;
+            
+            if (direction === -1) {
+                carousel.scrollLeft -= scrollAmount;
+            } else {
+                carousel.scrollLeft += scrollAmount;
+            }
+        }
+
+        // 플레이리스트 재생
+        function playPlaylist(playlistId) {
+            console.log('플레이리스트 재생:', playlistId);
+            // 플레이리스트 페이지 또는 플레이어로 이동
+            window.location.href = `/playlist/${playlistId}`;
+        }
+
+        // 페이지 로드 시
+        window.addEventListener('load', function() {
+            console.log('메인 페이지 로드됨');
+        });
+    </script>
+</body>
+<!-- head ------------------------------------------------------------------------------------->
+</html>
