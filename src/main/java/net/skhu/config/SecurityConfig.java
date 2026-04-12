@@ -15,7 +15,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 // 공개 페이지
                 .requestMatchers("/palette/mainPage", "/palette/loginPage", 
-                		"/palette/searchPage", "/palette/signUpPage", "/palette/streamPage").permitAll()
+                		"/palette/searchPage", "/palette/search", "/palette/signUpPage", "/palette/streamPage").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**").permitAll()
                 .requestMatchers("/api/user/check").permitAll()
                 // 그 외 모든 페이지는 인증 필요
