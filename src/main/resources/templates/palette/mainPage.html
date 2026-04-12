@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Palette-mainPage</title>
+    <title>Palette Player - mainPage</title>
     <style>
         * {
             margin: 0;
@@ -547,7 +547,7 @@
     <nav class="navbar">
         <div class="navbar-brand" onclick="goHome()">
             <div class="navbar-brand-icon">♪</div>
-            <span>Music Player</span>
+            <span>Palette Music</span>
         </div>
 
         <div class="search-container">
@@ -557,14 +557,13 @@
                 class="search-box" 
                 id="searchInput"
                 placeholder="음악 검색..."
-                onkeyup="handleSearch()"
             >
         </div>
 
         <div class="navbar-buttons">
             <button class="btn btn-login" onclick="goLogin()">로그인</button>
             <button class="btn btn-signup" onclick="goSignup()">회원가입</button>
-            <button class="btn-profile" onclick="goProfile()" title="마이페이지">👤</button>
+            <button class="btn-profile" onclick="goMyPage()" title="마이페이지">👤</button>
         </div>
     </nav>
 
@@ -798,41 +797,41 @@
 
     <!-- 푸터 -->
     <footer>
-        <p>&copy; 2024 Music Player. 모든 권리 보유.</p>
+        <p>&copy; 2026 palette. 모든 권리 보유.</p>
     </footer>
 
     <script>
-        // 홈으로 이동
+        // 메인 화면으로 이동
         function goHome() {
-            window.location.href = '/';
+            window.location.href = '/palette/mainPage';
         }
 
         // 로그인 페이지로 이동
         function goLogin() {
-            window.location.href = '/login';
+            window.location.href = '/palette/loginPage';
         }
 
         // 회원가입 페이지로 이동
         function goSignup() {
-            window.location.href = '/signup';
+            window.location.href = '/palette/signUpPage';
         }
 
         // 마이페이지로 이동
-        function goProfile() {
-            // 로그인 여부 확인 후 이동
+        function goMyPage() {
+            // Ajax 로그인 여부 확인 후 이동
             fetch('/api/user/check')
                 .then(response => response.json())
                 .then(data => {
                     if (data.isLoggedIn) {
-                        window.location.href = '/profile';
+                        window.location.href = '/palette/myPage';
                     } else {
                         alert('로그인 후 마이페이지를 방문할 수 있습니다.');
-                        window.location.href = '/login';
+                        window.location.href = '/palette/loginPage';
                     }
                 })
                 .catch(error => {
                     console.error('오류:', error);
-                    window.location.href = '/login';
+                    window.location.href = '/palette/loginPage';
                 });
         }
 
@@ -842,8 +841,8 @@
             if (searchInput.trim() === '') return;
             
             console.log('검색:', searchInput);
-            // 검색 결과 페이지로 이동
-            window.location.href = `/search?q=${encodeURIComponent(searchInput)}`;
+            // GET 요청으로 변경 (CSRF 토큰 문제 회피)
+            window.location.href = `/palette/search?keyword=${encodeURIComponent(searchInput)}`;
         }
 
         // 엔터키로 검색

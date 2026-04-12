@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Player - Search</title>
+    <title>Palette Player - SearchPage</title>
     <style>
         * {
             margin: 0;
@@ -200,7 +200,7 @@
         }
 
         .search-query span {
-            color: #87CEEB;
+            color: #2C3E50;
         }
 
         .search-result-count {
@@ -618,7 +618,7 @@
     <nav class="navbar">
         <div class="navbar-brand" onclick="goHome()">
             <div class="navbar-brand-icon">♪</div>
-            <span>Music Player</span>
+            <span>Palette Music</span>
         </div>
 
         <div class="search-container">
@@ -628,15 +628,14 @@
                 class="search-box" 
                 id="searchInput"
                 placeholder="음악 검색..."
-                value=""
-                onkeyup="handleSearch()"
+                th:value="${keyword}"
             >
         </div>
 
         <div class="navbar-buttons">
             <button class="btn btn-login" onclick="goLogin()">로그인</button>
             <button class="btn btn-signup" onclick="goSignup()">회원가입</button>
-            <button class="btn-profile" onclick="goProfile()" title="마이페이지">👤</button>
+            <button class="btn-profile" onclick="goMyPage()" title="마이페이지">👤</button>
         </div>
     </nav>
 
@@ -645,10 +644,13 @@
         <!-- 검색 결과 헤더 -->
         <section class="search-header">
             <div class="search-query">
-                "<span id="queryText">음악</span>" 검색 결과
+                "<span id="queryText" th:text="${keyword != null and keyword != '' ? keyword : '검색어 없음'}">음악</span>" 검색 결과
             </div>
-            <div class="search-result-count">
-                총 <span id="resultCount">0</span>개의 결과
+            <div class="search-result-count" th:if="${songs != null or artists != null or albums != null}">
+                총 <span id="resultCount" th:text="${(songs != null ? songs.size() : 0) + (artists != null ? artists.size() : 0) + (albums != null ? albums.size() : 0)}">0</span>개의 결과
+            </div>
+            <div class="search-result-count" th:if="${songs == null and artists == null and albums == null}">
+                <span style="color: red;">데이터를 불러올 수 없습니다. 콘솔 로그를 확인하세요.</span>
             </div>
         </section>
 
@@ -658,22 +660,91 @@
             <button class="filter-button" onclick="filterResults('song')">음악</button>
             <button class="filter-button" onclick="filterResults('artist')">아티스트</button>
             <button class="filter-button" onclick="filterResults('album')">앨범</button>
-            <button class="filter-button" onclick="filterResults('playlist')">플레이리스트</button>
         </div>
 
-        <!-- 로딩 표시 -->
-        <div class="loading" id="loadingIndicator" style="display: none;">
-            <div class="spinner"></div>
+        <!-- 곡 검색 결과 -->
+        <div th:if="${songs != null and songs.size() > 0}">
+            <section class="results-section">
+                <div class="section-title">
+                    <div class="section-icon">🎵</div>
+                    음악 (<span th:text="${songs.size()}">0</span>)
+                </div>
+                
+                <div class="results-grid">
+                    <div th:each="song : ${songs}" class="result-card" th:onclick="'playSong(' + ${song.songId} + ')'">
+                        <div class="card-image">
+                            <img th:if="${song.imageUrl}" th:src="${song.imageUrl}" th:alt="${song.title}">
+                            <span th:unless="${song.imageUrl}">🎵</span>
+                            <div class="card-overlay">
+                                <div class="play-button">▶</div>
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title" th:text="${song.title}">곡명</div>
+                            <div class="card-artist" th:text="'아티스트 ID: ' + ${song.artistId}">아티스트</div>
+                            <div class="card-meta">
+                                <span th:text="'⏱️ ' + ${song.duration} + '초'">⏱️ 0초</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
 
-        <!-- 검색 결과 -->
-        <div id="resultsContainer"></div>
+        <!-- 아티스트 검색 결과 -->
+        <div th:if="${artists != null and artists.size() > 0}">
+            <section class="results-section">
+                <div class="section-title">
+                    <div class="section-icon">🎤</div>
+                    아티스트 (<span th:text="${artists.size()}">0</span>)
+                </div>
+                
+                <div class="results-grid">
+                    <div th:each="artist : ${artists}" class="result-card" th:onclick="'viewArtist(' + ${artist.artistId} + ')'">
+                        <div class="card-image pink">
+                            <img th:if="${artist.imageUrl}" th:src="${artist.imageUrl}" th:alt="${artist.name}">
+                            <span th:unless="${artist.imageUrl}">🎤</span>
+                            <div class="card-overlay">
+                                <div class="play-button">→</div>
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title" th:text="${artist.name}">아티스트명</div>
+                            <div class="card-artist" th:text="${artist.bio}">설명</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
 
-        <!-- 페이지네이션 -->
-        <div class="pagination" id="pagination"></div>
+        <!-- 앨범 검색 결과 -->
+        <div th:if="${albums != null and albums.size() > 0}">
+            <section class="results-section">
+                <div class="section-title">
+                    <div class="section-icon">💿</div>
+                    앨범 (<span th:text="${albums.size()}">0</span>)
+                </div>
+                
+                <div class="results-grid">
+                    <div th:each="album : ${albums}" class="result-card" th:onclick="'viewAlbum(' + ${album.albumId} + ')'">
+                        <div class="card-image purple">
+                            <img th:if="${album.imageUrl}" th:src="${album.imageUrl}" th:alt="${album.title}">
+                            <span th:unless="${album.imageUrl}">💿</span>
+                            <div class="card-overlay">
+                                <div class="play-button">→</div>
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title" th:text="${album.title}">앨범명</div>
+                            <div class="card-artist" th:text="${album.description}">설명</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
 
         <!-- 빈 결과 -->
-        <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-state" th:if="${(songs == null or songs.size() == 0) and (artists == null or artists.size() == 0) and (albums == null or albums.size() == 0)}">
             <div class="empty-icon">🔍</div>
             <h2 class="empty-title">검색 결과가 없습니다</h2>
             <p class="empty-text">다른 검색어로 시도해보세요</p>
@@ -691,54 +762,40 @@
 
     <!-- 푸터 -->
     <footer>
-        <p>&copy; 2024 Music Player. 모든 권리 보유.</p>
+        <p>&copy; 2026 palette. 모든 권리 보유.</p>
     </footer>
 
     <script>
-        let currentPage = 1;
-        let currentFilter = 'all';
-        let allResults = [];
-
-        // URL에서 검색어 가져오기
-        const urlParams = new URLSearchParams(window.location.search);
-        const query = urlParams.get('q') || '';
-        
-        if (query) {
-            document.getElementById('searchInput').value = query;
-            document.getElementById('queryText').textContent = query;
-            searchMusic(query);
-        }
-
-        // 홈으로 이동
+        // 메인 화면으로 이동
         function goHome() {
-            window.location.href = '/';
+            window.location.href = '/palette/mainPage';
         }
 
         // 로그인 페이지로 이동
         function goLogin() {
-            window.location.href = '/login';
+            window.location.href = '/palette/loginPage';
         }
 
         // 회원가입 페이지로 이동
         function goSignup() {
-            window.location.href = '/signup';
+            window.location.href = '/palette/signUpPage';
         }
 
         // 마이페이지로 이동
-        function goProfile() {
+        function goMyPage() {
             fetch('/api/user/check')
                 .then(response => response.json())
                 .then(data => {
                     if (data.isLoggedIn) {
-                        window.location.href = '/profile';
+                        window.location.href = '/palette/myPage';
                     } else {
                         alert('로그인 후 마이페이지를 방문할 수 있습니다.');
-                        window.location.href = '/login';
+                        window.location.href = '/palette/loginPage';
                     }
                 })
                 .catch(error => {
                     console.error('오류:', error);
-                    window.location.href = '/login';
+                    window.location.href = '/palette/loginPage';
                 });
         }
 
@@ -747,11 +804,9 @@
             const searchInput = document.getElementById('searchInput').value;
             if (searchInput.trim() === '') return;
             
-            // URL 업데이트
-            window.history.replaceState({}, '', `/search?q=${encodeURIComponent(searchInput)}`);
-            
-            document.getElementById('queryText').textContent = searchInput;
-            searchMusic(searchInput);
+            console.log('검색:', searchInput);
+            // 검색 결과 페이지로 이동 (GET 요청)
+            window.location.href = `/palette/search?keyword=${encodeURIComponent(searchInput)}`;
         }
 
         // 엔터키로 검색
@@ -761,145 +816,35 @@
             }
         });
 
-        // 음악 검색
-        function searchMusic(query) {
-            document.getElementById('loadingIndicator').style.display = 'flex';
-            document.getElementById('resultsContainer').innerHTML = '';
-            document.getElementById('pagination').innerHTML = '';
-            document.getElementById('emptyState').style.display = 'none';
-
-            fetch(`/api/search?q=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('loadingIndicator').style.display = 'none';
-
-                    if (data.success && data.results.length > 0) {
-                        allResults = data.results;
-                        document.getElementById('resultCount').textContent = allResults.length;
-                        displayResults(allResults, 1);
-                    } else {
-                        document.getElementById('resultCount').textContent = '0';
-                        document.getElementById('emptyState').style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('오류:', error);
-                    document.getElementById('loadingIndicator').style.display = 'none';
-                    document.getElementById('resultCount').textContent = '0';
-                    document.getElementById('emptyState').style.display = 'block';
-                });
-        }
-
         // 필터 적용
         function filterResults(type) {
-            currentFilter = type;
-            currentPage = 1;
-
+            console.log('필터:', type);
             // 버튼 상태 업데이트
             document.querySelectorAll('.filter-button').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
-
-            // 필터링된 결과 표시
-            let filteredResults = allResults;
-            if (type !== 'all') {
-                filteredResults = allResults.filter(result => result.type === type);
-            }
-
-            document.getElementById('resultCount').textContent = filteredResults.length;
-            displayResults(filteredResults, 1);
         }
 
-        // 결과 표시
-        function displayResults(results, page) {
-            const itemsPerPage = 12;
-            const startIndex = (page - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const paginatedResults = results.slice(startIndex, endIndex);
-
-            let html = '<div class="results-grid">';
-
-            paginatedResults.forEach((result, index) => {
-                const imageColor = ['', 'pink', 'purple'][index % 3];
-                html += `
-                    <div class="result-card" onclick="playMusic(${result.id})">
-                        <div class="card-image ${imageColor}">
-                            ${result.imageUrl ? `<img src="${result.imageUrl}" alt="${result.title}">` : '♪'}
-                            <div class="card-overlay">
-                                <div class="play-button">▶</div>
-                            </div>
-                        </div>
-                        <div class="card-info">
-                            <div class="card-title">${result.title}</div>
-                            <div class="card-artist">${result.artist}</div>
-                            <div class="card-meta">
-                                <span>🎵 ${result.plays || 0}</span>
-                                <span>⏱️ ${formatDuration(result.duration)}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += '</div>';
-            document.getElementById('resultsContainer').innerHTML = html;
-
-            // 페이지네이션
-            const totalPages = Math.ceil(results.length / itemsPerPage);
-            if (totalPages > 1) {
-                displayPagination(totalPages, page);
-            }
+        // 곡 재생
+        function playSong(songId) {
+            console.log('곡 재생:', songId);
+            // 스트리밍 페이지로 이동
+            window.location.href = `/palette/streamPage?songId=${songId}`;
         }
 
-        // 페이지네이션 표시
-        function displayPagination(totalPages, currentPage) {
-            let html = '';
-
-            // 이전 버튼
-            if (currentPage > 1) {
-                html += `<button class="page-button" onclick="goToPage(${currentPage - 1})">◀</button>`;
-            }
-
-            // 페이지 번호
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === currentPage) {
-                    html += `<button class="page-button active">${i}</button>`;
-                } else {
-                    html += `<button class="page-button" onclick="goToPage(${i})">${i}</button>`;
-                }
-            }
-
-            // 다음 버튼
-            if (currentPage < totalPages) {
-                html += `<button class="page-button" onclick="goToPage(${currentPage + 1})">▶</button>`;
-            }
-
-            document.getElementById('pagination').innerHTML = html;
+        // 아티스트 보기
+        function viewArtist(artistId) {
+            console.log('아티스트 보기:', artistId);
+            // 아티스트 상세 페이지로 이동
+            window.location.href = `/palette/searchPage?artistId=${artistId}`;
         }
 
-        // 페이지 이동
-        function goToPage(page) {
-            currentPage = page;
-            let filteredResults = allResults;
-            if (currentFilter !== 'all') {
-                filteredResults = allResults.filter(result => result.type === currentFilter);
-            }
-            displayResults(filteredResults, page);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // 음악 재생
-        function playMusic(musicId) {
-            window.location.href = `/song/play/${musicId}`;
-        }
-
-        // 시간 포맷
-        function formatDuration(seconds) {
-            if (!seconds) return '0:00';
-            const minutes = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        // 앨범 보기
+        function viewAlbum(albumId) {
+            console.log('앨범 보기:', albumId);
+            // 앨범 상세 페이지로 이동
+            window.location.href = `/palette/searchPage?albumId=${albumId}`;
         }
 
         // 페이지 로드 시
