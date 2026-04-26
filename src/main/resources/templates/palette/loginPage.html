@@ -393,19 +393,22 @@
         </div>
 
         <!-- 로그인 폼 -->
-        <form id="loginForm" onsubmit="handleLogin(event)">
-            <!-- 아이디 입력 -->
+        <form method="post" id="loginForm" onsubmit="handleLogin(event)">
+            <!-- 이메일 입력 -->
             <div class="form-group">
-                <label class="form-label">아이디</label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    class="form-input" 
-                    placeholder="아이디를 입력하세요"
-                    autocomplete="username"
-                    required
-                >
-                <div class="error-message" id="usernameError"></div>
+                <label class="form-label">이메일</label>
+                <div class="input-wrapper">
+                    <input
+                            type="email"
+                     
+                            id="email"
+                            class="form-input with-icon"
+                            placeholder="example@email.com"
+                            autocomplete="email"
+                            required>
+                    <span class="input-icon"></span>
+                </div>
+                <div class="status-message" id="emailStatus"></div>
             </div>
 
             <!-- 비밀번호 입력 -->
@@ -413,7 +416,8 @@
                 <label class="form-label">비밀번호</label>
                 <div class="password-wrapper">
                     <input 
-                        type="password" 
+                        type="password"
+                      
                         id="password" 
                         class="form-input with-toggle" 
                         placeholder="비밀번호를 입력하세요"
