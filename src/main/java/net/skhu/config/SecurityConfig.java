@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,19 +19,14 @@ public class SecurityConfig {
                 // 공개 페이지
                 .requestMatchers("/palette/mainPage", "/palette/loginPage", 
                 		"/palette/searchPage", "/palette/search", "/palette/signUpPage", "/palette/streamPage",
-                		"/palette/upLoadPage", "/palette/editPage", "/palette/myPage").permitAll()
+                		"/palette/upLoadPage", "/palette/editPage", "/palette/myPage", "/palette/logout").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/**/*.css", "/**/*.js").permitAll()
                 .requestMatchers("/api/user/check").permitAll()
                 // 그 외 모든 페이지는 인증 필요
                 .anyRequest().authenticated()
             )
-            .csrf(csrf -> csrf
-                    .ignoringRequestMatchers("/palette/signUpPage")  // 회원가입 POST는 CSRF 검증 제외
-                )
-            .formLogin(form -> form
-                .loginPage("/palette/loginPage")
-                .permitAll()
-            )
+            .csrf(csrf -> csrf.disable())   // 회원가입 POST는 CSRF 검증 제외
+
             .logout(logout -> logout
                 .permitAll()
             );

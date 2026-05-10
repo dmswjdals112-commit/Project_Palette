@@ -133,6 +133,12 @@
             color: white;
             transform: translateY(-2px);
         }
+        
+        .btn-logout {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
 
         .btn-signup {
             background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%);
@@ -560,11 +566,19 @@
             >
         </div>
 
-        <div class="navbar-buttons">
-            <button class="btn btn-login" onclick="goLogin()">로그인</button>
-            <button class="btn btn-signup" onclick="goSignup()">회원가입</button>
-            <button class="btn-profile" onclick="goMyPage()" title="마이페이지">👤</button>
-        </div>
+        <!-- 1. 로그인 상태일 때 (세션에 loginUser가 있음) -->
+    	<th:block th:if="${session.loginUser != null}">
+        	<form method="post" th:action="@{/palette/logout}" style="display:inline;">
+    			<button type="submit" class="btn btn-logout">로그아웃</button>
+    		</form>
+        	<button class="btn-profile" onclick="goMyPage()" title="마이페이지">👤</button>
+    	</th:block>
+
+    	<!-- 2. 로그아웃 상태일 때 (세션에 loginUser가 없음) -->
+    	<th:block th:if="${session.loginUser == null}">
+        	<button class="btn btn-login" onclick="goLogin()">로그인</button>
+        	<button class="btn btn-signup" onclick="goSignup()">회원가입</button>
+    	</th:block>
     </nav>
 
     <!-- 메인 컨텐츠 -->
@@ -810,6 +824,7 @@
         function goLogin() {
             window.location.href = '/palette/loginPage';
         }
+        
 
         // 회원가입 페이지로 이동
         function goSignup() {
@@ -818,21 +833,13 @@
 
         // 마이페이지로 이동
         function goMyPage() {
-            // Ajax 로그인 여부 확인 후 이동
-            fetch('/api/user/check')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.isLoggedIn) {
-                        window.location.href = '/palette/myPage';
-                    } else {
-                        alert('로그인 후 마이페이지를 방문할 수 있습니다.');
-                        window.location.href = '/palette/loginPage';
-                    }
-                })
-                .catch(error => {
-                    console.error('오류:', error);
-                    window.location.href = '/palette/loginPage';
-                });
+            window.location.href = '/palette/myPage';
+                    
+        }
+        
+        // 로그아웃 처리
+        function goLogout() {
+        	window.location.href = '/palette/logout';
         }
 
         // 검색 기능
